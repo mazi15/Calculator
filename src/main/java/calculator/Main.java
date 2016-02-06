@@ -3,7 +3,8 @@ package calculator;
 import calculator.exception.CalculatorException;
 import calculator.utils.ArithmeticSymbols;
 import calculator.utils.Helper;
-import org.apache.log4j.*;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,7 +12,9 @@ import java.util.List;
 import java.util.Stack;
 
 /**
- * Calculator class with stack implementation
+ * Calculator class with list and stack implementation
+ * Input expression string is first stored in an ArrayList of Strings
+ * Then evaluated using Stack
  */
 public class Main {
 
@@ -55,6 +58,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws CalculatorException {
+        LOGGER.debug("In main method, printing arguments..." + Arrays.toString(args));
         //Initialise main
         Main main = new Main();
 
@@ -80,12 +84,10 @@ public class Main {
         //Set Logger Verbose Level
         main.setLoggingLevel(inputLoggerLevel);
 
-        LOGGER.debug("In main method, printing arguments..." + Arrays.toString(args));
-
         LOGGER.info("Computing input expression....");
         //Calculate expression
         String outputResult = main.calculate(inputExprStr);
-        if(Helper.isNullOrEmptyString(outputResult))
+        if(Helper.isNullOrEmptyString(outputResult) || !Helper.isInteger(outputResult))
             main.throwCalculatorException(CalculatorException.ERROR_ENCOUNTERED_IN_CALCULATION);
 
         LOGGER.debug("In main method, computing complete with result:" + outputResult + ".");
@@ -105,26 +107,7 @@ public class Main {
             String s = inputLoggerLevel.toUpperCase();
             logLevel = s.equals("DEBUG") ? Level.DEBUG :(s.equals("INFO") ? Level.INFO :( s.equals("ERROR") ? Level.ERROR :DEFAULT_LEVEL));
         }
-
-        Logger.getRootLogger().getLoggerRepository().resetConfiguration();
-
-        ConsoleAppender console = new ConsoleAppender(); //create appender
-        //configure the appender
-        String PATTERN = "%d [%p|%c|%C{1}] %m%n";
-        console.setLayout(new PatternLayout(PATTERN));
-        console.setThreshold(logLevel);
-        console.activateOptions();
-        Logger.getRootLogger().addAppender(console);
-
-        FileAppender fa = new FileAppender();
-        fa.setName("FileLogger");
-        fa.setFile("calculator.log");
-        fa.setLayout(new PatternLayout("%d %-5p [%c{1}] %m%n"));
-        fa.setThreshold(logLevel);
-        fa.setAppend(true);
-        fa.activateOptions();
-        Logger.getRootLogger().addAppender(fa);
-
+        LOGGER.setLevel(logLevel);
         LOGGER.debug("Setting log level..." + logLevel);
     }
 
@@ -180,7 +163,7 @@ public class Main {
     private void buildInputExpressionList(String inputExprStr) throws CalculatorException {
         LOGGER.debug("In buildInputExpressionList method, printing arguments..." + inputExprStr);
         //Remove all whitespaces from input expression
-        inputExprStr = inputExprStr.replaceAll("\\s","");
+        inputExprStr = inputExprStr.toLowerCase().replaceAll("\\s","");
 
         int exprLength = inputExprStr.length();
         StringBuilder arbExpression = new StringBuilder();
@@ -233,14 +216,9 @@ public class Main {
             boolean containsDigit = arbExpression.matches(".*\\d+.*");
             if (containsDigit) {
                 //If contains true, then check arbitrary expression is a valid integer
-                try {
-                    //Example: 55 is valid
-                    Integer value = Integer.parseInt(arbExpression);
-                    return true;
-                } catch (NumberFormatException e) {
-                    //Example: 5a or a5 is invalid
-                    return false;
-                }
+                //Example: 55 is valid
+                //Example: 5a or a5 is invalid
+                return Helper.isInteger(arbExpression);
             } else {
                 //Example: aaa is valid
                 //If contains false, then arbitrary expression valid string
@@ -249,6 +227,10 @@ public class Main {
         }
     }
 
+    /**
+     * Method to evaluate "let" operator
+     * @throws calculator.exception.CalculatorException
+     */
     private void processLetOperatorInInputExpressionList() throws CalculatorException {
         LOGGER.debug("In processLetOperatorInInputExpressionList method, printing inputExpressionList..." + inputExpressionList.toString());
         while(inputExpressionList.contains(ArithmeticSymbols.LET_OPERATOR.toString())) {
@@ -294,6 +276,11 @@ public class Main {
         LOGGER.debug("In processLetOperatorInInputExpressionList method, printing result inputExpressionList..." + inputExpressionList.toString());
     }
 
+    /**
+     * Method to pop nested expression from Stack with parenthesis
+     * @return
+     * @throws calculator.exception.CalculatorException
+     */
     private List getExpressionListFromStackWithParenthesis() throws CalculatorException {
         LOGGER.debug("In getExpressionListFromStackWithParenthesis method...");
         List<String> expressionList = new ArrayList<String>();
@@ -315,12 +302,13 @@ public class Main {
         return expressionList;
     }
 
+    /**
+     * Method to evaluate Arithmetic Function
+     * @return
+     * @throws calculator.exception.CalculatorException
+     */
     private String processArithmeticFunctionInInputExpressionList() throws CalculatorException {
         LOGGER.debug("In processArithmeticFunctionInInputExpressionList method, printing inputExpressionList..." + inputExpressionList.toString());
-        //int parameters
-        Class[] paramInt = new Class[2];
-        paramInt[0] = Integer.class;
-        paramInt[1] = Integer.class;
         for(int i = (inputExpressionList.size()-1); i >= 0 ; i-- ){
             String currentExpression = inputExpressionList.remove(i);
             if(ArithmeticSymbols.isArithmeticFunction(currentExpression)) {
@@ -364,6 +352,13 @@ public class Main {
         return result;
     }
 
+    /**
+     * Compute  result for Arithmetic Function given input Arguments
+     * @param arithmeticFunctionName
+     * @param integerOp1
+     * @param integerOp2
+     * @return
+     */
     private Integer compute(String arithmeticFunctionName, Integer integerOp1, Integer integerOp2 ){
         LOGGER.debug("In compute method, printing args... function name:" + arithmeticFunctionName + ", intergerOperand1: " + integerOp1 + ", integerOperand2: "+ integerOp2);
         Integer result = null;
@@ -389,19 +384,19 @@ public class Main {
      * @return
      */
     private Integer updateParenthesesCount(String parenthesesStr, Integer parenthesesCount){
-        LOGGER.debug("In compute method, printing args... input string:" + parenthesesStr + ", parenthesis count: " + parenthesesCount );
+        LOGGER.debug("In updateParenthesesCount method, printing args... input string:" + parenthesesStr + ", parenthesis count: " + parenthesesCount );
         if(ArithmeticSymbols.isOpenParenthesis(parenthesesStr))
             parenthesesCount++;
         if(ArithmeticSymbols.isCloseParenthesis(parenthesesStr))
             parenthesesCount--;
-        LOGGER.debug("In compute method, printing result... parenthesis count: " + parenthesesCount );
+        LOGGER.debug("In updateParenthesesCount method, printing result... parenthesis count: " + parenthesesCount );
         return parenthesesCount;
     }
 
     /**
      * Method to throw CalculatorException and log error message.
      * @param message
-     * @throws CalculatorException
+     * @throws calculator.exception.CalculatorException
      */
     private void throwCalculatorException(String message) throws CalculatorException {
         LOGGER.error(message);

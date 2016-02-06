@@ -1,17 +1,17 @@
 package calculator;
 
-import static org.junit.Assert.*;
-
 import calculator.exception.CalculatorException;
-import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import static org.junit.Assert.assertEquals;
+
 /**
- * Calculator Test Case
+ * Test Case for
+ * Calculator class with stack implementation
  */
 public class MainTest {
 
@@ -111,6 +111,16 @@ public class MainTest {
         testCalculate(55, "let(a,5,let(b,multi(a,10),add(b,a)))");
 
         testCalculate(40, "let(a,let(b,10,add(b,b)),let(b,20,add(a,b)))");
+    }
+
+    @Test
+    public void shouldCalculateToExpectedResult_CaseInsensitive() throws CalculatorException {
+        testCalculate(40, "LET(A,LET(B,10,ADD(B,b)),LET(B,20,ADD(A,b)))");
+    }
+
+    @Test
+    public void shouldCalculateToExpectedResult_RemovingSpaces() throws CalculatorException {
+        testCalculate(40, " let (a , let( b,    10, add ( b , b ) ) , let ( b, 20 , add ( a , b )))");
     }
 
     @Test

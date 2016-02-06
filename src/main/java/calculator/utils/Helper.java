@@ -41,4 +41,27 @@ public class Helper {
     }
 
 
+    /**
+     * Function to check if String is valid integer
+     * @param inputStr
+     * @return
+     */
+    public static boolean isInteger(String inputStr){
+        if(isNullOrEmptyString(inputStr))
+            return false;
+        for(int i = 0 ; i < inputStr.length() ; i++){
+            Character inputCh = inputStr.charAt(i);
+            if(i==0 && ArithmeticSymbols.isNegativeSign(inputCh.toString())){
+                if(inputStr.length() == 1)
+                    return false;
+                else
+                    continue;
+            }
+            if(!isDigit(inputCh))
+                return false;
+        }
+        return true;
+
+    }
+
 }
