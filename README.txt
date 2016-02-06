@@ -32,4 +32,13 @@ B. Validation rules for input expression:
     - Any arbitrary expression, variable name or variable value are not surrounded by parenthesis
 	  Example: (a), (5), (add(5,5)) : Invalid / Not tested for such expressions
     - The program only works with () parenthesis and no other parenthesis
-	 
+
+ Tasks completed from the assignment document:
+ 1. Functional Requirements
+ 2. Logging using Log4j
+ 3. Exception Handling
+ 4. Maven Build
+ 5. JUnit Tests
+ 6. Git Repository
+ https://github.com/mazi15/Calculator.git
+ 7. Continuous Integration using Travis-CI
