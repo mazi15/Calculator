@@ -3,8 +3,7 @@ package calculator;
 import calculator.exception.CalculatorException;
 import calculator.utils.ArithmeticSymbols;
 import calculator.utils.Helper;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.log4j.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -100,7 +99,25 @@ public class MainTree {
             String s = inputLoggerLevel.toUpperCase();
             logLevel = s.equals("DEBUG") ? Level.DEBUG :(s.equals("INFO") ? Level.INFO :( s.equals("ERROR") ? Level.ERROR :DEFAULT_LEVEL));
         }
-        LOGGER.setLevel(logLevel);
+        Logger.getRootLogger().getLoggerRepository().resetConfiguration();
+
+        ConsoleAppender console = new ConsoleAppender(); //create appender
+        //configure the appender
+        String PATTERN = "%d [%p|%c|%C{1}] %m%n";
+        console.setLayout(new PatternLayout(PATTERN));
+        console.setThreshold(logLevel);
+        console.activateOptions();
+        Logger.getRootLogger().addAppender(console);
+
+        FileAppender fa = new FileAppender();
+        fa.setName("FileLogger");
+        fa.setFile("calculator.log");
+        fa.setLayout(new PatternLayout("%d %-5p [%c{1}] %m%n"));
+        fa.setThreshold(logLevel);
+        fa.setAppend(true);
+        fa.activateOptions();
+        Logger.getRootLogger().addAppender(fa);
+
         LOGGER.debug("Setting log level..." + logLevel);
     }
 
